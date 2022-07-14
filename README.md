@@ -1,7 +1,7 @@
 <img width="606" alt="Screen Shot 2022-07-14 at 3 29 21 PM" src="https://user-images.githubusercontent.com/59661417/179099145-229e645e-0b4e-47da-bd4c-2951bd7cc1b7.png">
 
 
-# 🍌 Bananas - A Single place to view your Juicebox Project & Multi-Sig Wallet
+# 🍌 Bananas -A single place to view and manage your juicebox project and it’s related multi-sig
 
 # 🏄‍♂️ Getting Started Locally
 
