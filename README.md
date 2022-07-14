@@ -1,4 +1,5 @@
-<img width="1195" alt="Screen Shot 2022-07-14 at 3 27 00 PM" src="https://user-images.githubusercontent.com/59661417/179098875-37ec534c-20cf-44e5-befa-4f3a530e47b6.png">
+<img width="606" alt="Screen Shot 2022-07-14 at 3 29 21 PM" src="https://user-images.githubusercontent.com/59661417/179099145-229e645e-0b4e-47da-bd4c-2951bd7cc1b7.png">
+
 
 # 🍌 Bananas - A Single place to view your Juicebox Project & Multi-Sig Wallet
 
