@@ -2,6 +2,11 @@ import { Button, Col, Menu, Row, Select } from "antd";
 import Routes from "./Routes";
 
 // import CreateMultiSigModal from "./components/MultiSig/CreateMultiSigModal";
+import useModal, { Provider } from "use-react-modal";
+
+import { createClient, configureChains, defaultChains, WagmiConfig, chain } from "wagmi";
+import { publicProvider } from "wagmi/providers/public";
+import { GraphQLClient, ClientContext, useQuery } from "graphql-hooks";
 
 import "antd/dist/antd.css";
 import {
@@ -29,8 +34,19 @@ import {
   NetworkSwitch,
   Ramp,
   ThemeSwitch,
+  Juicebox,
 } from "./components";
 import { ALCHEMY_KEY, NETWORKS } from "./constants";
+
+// ICONS
+import Twitter from "./components/icons/twitter.svg";
+import Discord from "./components/icons/discord.svg";
+import CopyLink from "./components/icons/link.svg";
+import JuiceBox from "./components/icons/juice-box.svg";
+import CalenderView from "./components/icons/calender-view.svg";
+import Lock from "./components/icons/lock.svg";
+// import ButtonCustom from "./components/Button";
+
 //import multiSigWalletABI from "./contracts/multi_sig_wallet";
 // contracts
 import axios from "axios";
@@ -44,7 +60,7 @@ const { Option } = Select;
 const { ethers } = require("ethers");
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.mainnet; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -67,10 +83,19 @@ const providers = [
   "https://rpc.scaffoldeth.io:48544",
 ];
 
+const { chains, provider, webSocketProvider } = configureChains([chain.localhost, chain.rinkeby], [publicProvider()]);
+
+const wagmiClient = createClient({
+  autoConnect: true,
+  provider,
+  webSocketProvider,
+});
+
+const networkOptions = [initialNetwork.name, "mainnet", "rinkeby"];
+
 function App(props) {
   // specify all the chains your app is available on. Eg: ['localhost', 'mainnet', ...otherNetworks ]
   // reference './constants.js' for other networks
-  const networkOptions = [initialNetwork.name, "mainnet", "rinkeby"];
 
   const cachedNetwork = window.localStorage.getItem("network");
   let targetNetwork = NETWORKS[cachedNetwork || "localhost"];
@@ -315,23 +340,19 @@ function App(props) {
   const loadWeb3Modal = useCallback(async () => {
     const provider = await web3Modal.connect();
     setInjectedProvider(new ethers.providers.Web3Provider(provider));
-
     provider.on("chainChanged", chainId => {
       console.log(`chain changed to ${chainId}! updating providers`);
       setInjectedProvider(new ethers.providers.Web3Provider(provider));
     });
-
     provider.on("accountsChanged", () => {
       console.log(`account changed!`);
       setInjectedProvider(new ethers.providers.Web3Provider(provider));
     });
-
     // Subscribe to session disconnection
     provider.on("disconnect", (code, reason) => {
       console.log(code, reason);
       logoutOfWeb3Modal();
     });
-    // eslint-disable-next-line
   }, [setInjectedProvider]);
 
   const getUserWallets = async isUpdate => {
@@ -561,7 +582,7 @@ function App(props) {
 
   const WalletActions = (
     <>
-      <div key={address} className="flex justify-start items-center p-2 my-2  flex-wrap ">
+      <div key={address} className="flex justify-start items-center p-2 my-2 flex-wrap">
         <div>
           <CreateMultiSigModal
             key={address}
@@ -686,47 +707,156 @@ function App(props) {
     </>
   );
 
-  return (
-    <div className="App">
-      {HeaderBar}
-      {WalletActions}
-      {MainMenu}
-      <Routes
-        // key={currentMultiSigAddress}
-        BACKEND_URL={BACKEND_URL}
-        DEBUG={DEBUG}
-        account={address}
-        address={address}
-        blockExplorer={blockExplorer}
-        contractAddress={contractAddress}
-        contractConfig={contractConfig}
-        contractName={contractName}
-        currentMultiSigAddress={currentMultiSigAddress}
-        customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.DAI}
-        executeTransactionEvents={executeTransactionEvents}
-        gasPrice={gasPrice}
-        localProvider={localProvider}
-        mainnetContracts={mainnetContracts}
-        mainnetProvider={mainnetProvider}
-        nonce={nonce}
-        ownerEvents={ownerEvents}
-        poolServerUrl={BACKEND_URL}
-        price={price}
-        readContracts={readContracts}
-        setIsCreateModalVisible={setIsCreateModalVisible}
-        signaturesRequired={signaturesRequired}
-        subgraphUri={props.subgraphUri}
-        tx={tx}
-        userHasMultiSigs={userHasMultiSigs}
-        userSigner={userSigner}
-        writeContracts={writeContracts}
-        yourLocalBalance={yourLocalBalance}
-        reDeployWallet={reDeployWallet}
-      />
+  const HOMEPAGE_QUERY = `query {
+    projects(where: { owner: "0x7c88E445fA773275eAdc619D5a6FBe12a4f40a24" }) {
+      projectId
+      metadataUri
+    }
+  }`;
 
-      <ThemeSwitch />
-      {BurnerWallet}
-    </div>
+  const { loading, error, data } = useQuery(HOMEPAGE_QUERY, {
+    //  variables: {
+    //    limit: 10,
+    //  },
+  });
+
+  useEffect(() => {
+    if (data?.projects[0]?.metadataUri) {
+      fetch(`https://cloudflare-ipfs.com/ipfs/{data?.projects[0]?.metadataUri}`)
+        .then(response => {
+          console.log("hii", response.json());
+        })
+        .catch(error => {
+          // handle the error
+        });
+    }
+  });
+
+  return (
+    <WagmiConfig client={wagmiClient}>
+      <Provider background="rgba(0, 0, 0, 0.5)">
+        {HeaderBar}
+        <div
+          className="flex justify-start items-center flex-wrap w-full"
+          style={{ border: "1px solid black", height: 200 }}
+        >
+          <div
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: 100,
+              border: "1px solid black",
+              backgroundColor: "#D9D9D9",
+              marginLeft: 80,
+            }}
+          ></div>
+          <div
+            style={{
+              flex: 1,
+              justifyContent: "start",
+              flexWrap: "wrap",
+              margin: 8,
+              width: 500,
+              flexDirection: "row",
+            }}
+          >
+            <text style={{ fontSize: 24, fontWeight: 800 }}>Sample Project</text>
+            <br />
+            <text style={{ width: 200 }}>
+              Add a nice description about this project here, please. Lorem ipsum dolor sit amet, consectetur adipiscing
+              elit. Pulvinar elementum elit elementum enim. Arcu nulla est adipiscing congue diam pulvinar.
+            </text>
+            <br />
+            <div style={{ display: "flex", width: 200, justifyContent: "space-between" }}>
+              <img src={Twitter} alt="twitter" />
+              <img src={Discord} alt="discord" />
+              <img src={CopyLink} alt="link" />
+              <img src={JuiceBox} alt="juice-box logo" />
+            </div>
+          </div>
+        </div>
+        <div style={{ margin: 8 }}>
+          <img src={CalenderView} alt="calender temporary" />
+        </div>
+        <div className="flex justify-start items-center flex-wrap">
+          <div className="bg-blue-100" style={{ width: "49vw", height: "100vh", border: "1px solid black", margin: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "start",
+                alignItems: "center",
+                width: "100%",
+                backgroundColor: "#95B9FF",
+                border: "1px solid black",
+                height: "40px",
+              }}
+            >
+              <img src={Lock} alt="lock icon" style={{ marginLeft: 4 }} />
+              <tex style={{ fontSize: 16, fontWeight: 600, marginLeft: 4 }}>Multisig Wallet</tex>
+            </div>
+            {/* <div>
+                <ButtonCustom title="Send Funds" backgroundColor="#95B9FF" />
+                <ButtonCustom title="Send NFT" backgroundColor="#FFDD64" />
+                <ButtonCustom title="Contract Interaction" backgroundColor="#F2F2F2" />
+              </div> */}
+            {WalletActions}
+            {MainMenu}
+            <Routes
+              // key={currentMultiSigAddress}
+              BACKEND_URL={BACKEND_URL}
+              DEBUG={DEBUG}
+              account={address}
+              address={address}
+              blockExplorer={blockExplorer}
+              contractAddress={contractAddress}
+              contractConfig={contractConfig}
+              contractName={contractName}
+              currentMultiSigAddress={currentMultiSigAddress}
+              customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.DAI}
+              executeTransactionEvents={executeTransactionEvents}
+              gasPrice={gasPrice}
+              localProvider={localProvider}
+              mainnetContracts={mainnetContracts}
+              mainnetProvider={mainnetProvider}
+              nonce={nonce}
+              ownerEvents={ownerEvents}
+              poolServerUrl={BACKEND_URL}
+              price={price}
+              readContracts={readContracts}
+              setIsCreateModalVisible={setIsCreateModalVisible}
+              signaturesRequired={signaturesRequired}
+              subgraphUri={props.subgraphUri}
+              tx={tx}
+              userHasMultiSigs={userHasMultiSigs}
+              userSigner={userSigner}
+              writeContracts={writeContracts}
+              yourLocalBalance={yourLocalBalance}
+              reDeployWallet={reDeployWallet}
+            />
+          </div>
+          <div style={{ width: "49vw", height: "100vh", border: "1px solid black", margin: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "start",
+                alignItems: "center",
+                width: "100%",
+                backgroundColor: "#FFDD64",
+                border: "1px solid black",
+                height: "40px",
+              }}
+            >
+              <img src={JuiceBox} alt="juice box icon" style={{ marginLeft: 4 }} />
+              <tex style={{ fontSize: 16, fontWeight: 600, marginLeft: 4 }}>Juicebox</tex>
+            </div>
+            <Juicebox />
+          </div>
+
+          <ThemeSwitch />
+          {BurnerWallet}
+        </div>
+      </Provider>
+    </WagmiConfig>
   );
 }
 

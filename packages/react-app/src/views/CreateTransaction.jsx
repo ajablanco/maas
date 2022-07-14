@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
+import useModal from "use-react-modal";
+
 import { useHistory } from "react-router-dom";
 import { Button, Input, Select, InputNumber, Space, Tooltip } from "antd";
 import { CodeOutlined } from "@ant-design/icons";
@@ -73,6 +75,12 @@ export default function CreateTransaction({
     setIsWalletConnectTransaction(false);
   }, [isWalletConnectTransaction]);
 
+  const { isOpen, openModal, Modal } = useModal();
+
+  useEffect(() => {
+    //openModal();
+  }, []);
+
   const createTransaction = async () => {
     try {
       //a little security in the frontend just because
@@ -139,94 +147,102 @@ export default function CreateTransaction({
   };
 
   return (
-    <div className="flex justify-center">
-      <div
-        // style={{ border: "1px solid #cccccc", padding: 16, width: 400, margin: "auto", marginTop: 64 }}
-        className="flex justify-center border-2 m-5 w-96 rounded-2xl shadow-md"
-      >
-        <div style={{ margin: 8 }}>
-          <div style={{ margin: 8, padding: 8 }}>
-            <Select value={methodName} style={{ width: "100%" }} onChange={setMethodName}>
-              <Option key="transferFunds">Send ETH</Option>
-              <Option key="addSigner">Add Signer</Option>
-              <Option key="removeSigner">Remove Signer</Option>
-              <Option key="customCallData">Custom Call Data</Option>
-              <Option key="wcCallData">
-                <img src="walletconnect-logo.svg" style={{ height: 20, width: 20 }} /> WalletConnect
-              </Option>
-            </Select>
-          </div>
-          {methodName == "wcCallData" ? (
-            <div style={inputStyle}>
-              <WalletConnectInput
-                chainId={localProvider?._network.chainId}
-                address={contractAddress}
-                loadWalletConnectData={loadWalletConnectData}
-                mainnetProvider={mainnetProvider}
-                price={price}
-              />
-            </div>
-          ) : (
-            <>
-              <div style={inputStyle}>
-                <AddressInput
-                  autoFocus
-                  ensProvider={mainnetProvider}
-                  placeholder={methodName == "transferFunds" ? "Recepient address" : "Owner address"}
-                  value={to}
-                  onChange={setTo}
-                />
-              </div>
-              <div style={inputStyle}>
-                {(methodName == "addSigner" || methodName == "removeSigner") && (
-                  <InputNumber
-                    style={{ width: "100%" }}
-                    placeholder="New # of signatures required"
-                    value={newSignaturesRequired}
-                    onChange={value => {
-                      setNewSignaturesRequired(value);
-                      setHasEdited(true);
-                    }}
-                  />
-                )}
-                {methodName == "customCallData" && (
-                  <>
-                    <Input.Group compact>
-                      <Input
-                        style={{ width: "calc(100% - 31px)", marginBottom: 20 }}
-                        placeholder="Custom call data"
-                        value={customCallData}
-                        onChange={e => {
-                          setCustomCallData(e.target.value);
-                        }}
-                      />
-                      <Tooltip title="Parse transaction data">
-                        <Button onClick={showModal} icon={<CodeOutlined />} />
-                      </Tooltip>
-                    </Input.Group>
-                    <TransactionDetailsModal
-                      visible={isModalVisible}
-                      txnInfo={parsedCustomCallData}
-                      handleOk={() => setIsModalVisible(false)}
-                      handleCancel={() => setIsModalVisible(false)}
+    <div>
+      <p>Modal is Open? {isOpen ? "Yes" : "No"}</p>
+      <button onClick={openModal}>OPEN</button>
+      {isOpen && (
+        <Modal>
+          <div className="flex justify-center">
+            <div
+              // style={{ border: "1px solid #cccccc", padding: 16, width: 400, margin: "auto", marginTop: 64 }}
+              className="flex justify-center border-2 m-5 w-96 rounded-2xl shadow-md"
+            >
+              <div style={{ margin: 8 }}>
+                <div style={{ margin: 8, padding: 8 }}>
+                  <Select value={methodName} style={{ width: "100%" }} onChange={setMethodName}>
+                    <Option key="transferFunds">Send ETH</Option>
+                    <Option key="addSigner">Add Signer</Option>
+                    <Option key="removeSigner">Remove Signer</Option>
+                    <Option key="customCallData">Custom Call Data</Option>
+                    <Option key="wcCallData">
+                      <img src="walletconnect-logo.svg" style={{ height: 20, width: 20 }} /> WalletConnect
+                    </Option>
+                  </Select>
+                </div>
+                {methodName == "wcCallData" ? (
+                  <div style={inputStyle}>
+                    <WalletConnectInput
+                      chainId={localProvider?._network.chainId}
+                      address={contractAddress}
+                      loadWalletConnectData={loadWalletConnectData}
                       mainnetProvider={mainnetProvider}
                       price={price}
                     />
+                  </div>
+                ) : (
+                  <>
+                    <div style={inputStyle}>
+                      <AddressInput
+                        autoFocus
+                        ensProvider={mainnetProvider}
+                        placeholder={methodName == "transferFunds" ? "Recepient address" : "Owner address"}
+                        value={to}
+                        onChange={setTo}
+                      />
+                    </div>
+                    <div style={inputStyle}>
+                      {(methodName == "addSigner" || methodName == "removeSigner") && (
+                        <InputNumber
+                          style={{ width: "100%" }}
+                          placeholder="New # of signatures required"
+                          value={newSignaturesRequired}
+                          onChange={value => {
+                            setNewSignaturesRequired(value);
+                            setHasEdited(true);
+                          }}
+                        />
+                      )}
+                      {methodName == "customCallData" && (
+                        <>
+                          <Input.Group compact>
+                            <Input
+                              style={{ width: "calc(100% - 31px)", marginBottom: 20 }}
+                              placeholder="Custom call data"
+                              value={customCallData}
+                              onChange={e => {
+                                setCustomCallData(e.target.value);
+                              }}
+                            />
+                            <Tooltip title="Parse transaction data">
+                              <Button onClick={showModal} icon={<CodeOutlined />} />
+                            </Tooltip>
+                          </Input.Group>
+                          <TransactionDetailsModal
+                            visible={isModalVisible}
+                            txnInfo={parsedCustomCallData}
+                            handleOk={() => setIsModalVisible(false)}
+                            handleCancel={() => setIsModalVisible(false)}
+                            mainnetProvider={mainnetProvider}
+                            price={price}
+                          />
+                        </>
+                      )}
+                      {(methodName == "transferFunds" || methodName == "customCallData") && (
+                        <EtherInput price={price} mode="USD" value={amount} onChange={setAmount} />
+                      )}
+                    </div>
+                    <Space style={{ marginTop: 32 }}>
+                      <Button loading={loading} onClick={createTransaction} type="primary">
+                        Propose
+                      </Button>
+                    </Space>
                   </>
                 )}
-                {(methodName == "transferFunds" || methodName == "customCallData") && (
-                  <EtherInput price={price} mode="USD" value={amount} onChange={setAmount} />
-                )}
               </div>
-              <Space style={{ marginTop: 32 }}>
-                <Button loading={loading} onClick={createTransaction} type="primary">
-                  Propose
-                </Button>
-              </Space>
-            </>
-          )}
-        </div>
-      </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

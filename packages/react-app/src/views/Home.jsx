@@ -46,7 +46,7 @@ function Home({
           </>
         )}
         {/* main contract info */}
-        <div className="flex  justify-around  flex-wrap  w-full border-2 p-4 md:w-auto md:rounded-3xl md:shadow-md ">
+        <div className="flex  justify-around  flex-wrap border-2 p-4 md:w-auto md:rounded-3xl md:shadow-md ">
           {/* contract balanace qr */}
           <div
             // style={{ paddingBottom: 32 }}
